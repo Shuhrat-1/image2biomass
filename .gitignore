@@ -1,0 +1,24 @@
+# Data — images are large (~1 GB); do not commit. See README for Kaggle link.
+data/raw/labelled/
+data/raw/kaggle_test/
+data/raw/*.zip
+data/processed/*.csv
+
+# Model checkpoints (large binaries)
+models/*.pt
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+*.egg-info/
+
+# OS / IDE
+.DS_Store
+.vscode/
+*.log
+
+# Keep the labelled.csv (small, useful) — do NOT ignore it
+!data/raw/labelled.csv
