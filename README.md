@@ -1,11 +1,24 @@
 # Image2Biomass: Predicting Pasture Biomass from Quadrat Photographs
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Shuhrat-1/image2biomass/blob/main/notebooks/train_colab.ipynb)
+
 Master's in Green Data Science — Practical Machine Learning (ISA, ULisboa).
 
 Predict five pasture biomass targets (grams) from 70x30 cm quadrat photographs,
 using the [CSIRO Image2Biomass](https://www.kaggle.com/competitions/csiro-biomass)
 dataset. The central question is a **modality comparison**: how much does the
 image add over two cheap ground measurements (NDVI and pasture height)?
+
+## Train on Colab (one click)
+
+Click the **Open in Colab** badge above, then:
+1. **Runtime → Change runtime type → GPU (T4)**.
+2. **Runtime → Run all**.
+3. When the Drive cell prompts, authorize access to your Google Drive
+   (the images live in `MyDrive/image2biomass_data/`).
+
+The notebook clones this repo for code and mounts Drive for the image data,
+then runs the full comparison and saves a deployable checkpoint.
 
 ## Key result
 
@@ -96,4 +109,4 @@ used and any manual modifications, per course guidelines.
 
 ## Team
 
-[Name 1 / Student ID 1], [Name 2 / Student ID 2]
+[Shuhrat Maksumov / Student ID 28548], [Xavier Loreto / Student ID 28648]
