@@ -14,11 +14,11 @@ image add over two cheap ground measurements (NDVI and pasture height)?
 Click the **Open in Colab** badge above, then:
 1. **Runtime → Change runtime type → GPU (T4)**.
 2. **Runtime → Run all**.
-3. When the Drive cell prompts, authorize access to your Google Drive
-   (the images live in `MyDrive/image2biomass_data/`).
 
-The notebook clones this repo for code and mounts Drive for the image data,
-then runs the full comparison and saves a deployable checkpoint.
+The notebook clones this repo for code and downloads the image data from a
+public link with `gdown` — no Google Drive authorization needed, so anyone
+(including a reviewer) can run it end to end. It runs the full comparison and
+saves a deployable checkpoint to the Colab file browser.
 
 ## Key result
 
@@ -109,4 +109,4 @@ used and any manual modifications, per course guidelines.
 
 ## Team
 
-[Shuhrat Maksumov / Student ID 28548], [Xavier Loreto / Student ID 28648]
+[Name 1 / Student ID 1], [Name 2 / Student ID 2]
