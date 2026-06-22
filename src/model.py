@@ -145,3 +145,29 @@ def build_model(kind: str = "resnet18", **kwargs) -> nn.Module:
 def count_trainable(model: nn.Module) -> int:
     """Number of trainable parameters (useful to compare freeze vs fine-tune)."""
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+# --------------------------------------------------------------------------- #
+# DINOv2 regression head (operates on precomputed frozen embeddings)
+# --------------------------------------------------------------------------- #
+class DINOv2Regressor(nn.Module):
+    """MLP head on top of a frozen DINOv2 embedding -> 5 regression outputs.
+
+    The backbone is frozen and embeddings are precomputed (see
+    dinov2_features.compute_embeddings), so this module only learns a small head
+    on D-dimensional vectors — fast and low-overfitting on ~285 samples.
+    """
+
+    def __init__(self, in_dim: int, n_targets: int = N_TARGETS,
+                 hidden: int = 256, dropout: float = 0.3) -> None:
+        super().__init__()
+        self.head = nn.Sequential(
+            nn.Linear(in_dim, hidden),
+            nn.BatchNorm1d(hidden),
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout),
+            nn.Linear(hidden, n_targets),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.head(x)

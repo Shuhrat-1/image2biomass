@@ -243,3 +243,82 @@ def load_checkpoint(path: Path, device: torch.device | None = None) -> tuple[nn.
     model.load_state_dict(ckpt["state_dict"])
     model.to(device).eval()
     return model, info
+
+
+# --------------------------------------------------------------------------- #
+# DINOv2 regression on precomputed embeddings (fast: trains only the head)
+# --------------------------------------------------------------------------- #
+def cross_validate_dinov2(wide: pd.DataFrame, n_splits: int = 5,
+                          max_epochs: int = 100, lr: float = 1e-3,
+                          weight_decay: float = 1e-4, patience: int = 12,
+                          batch_size: int = 64, verbose: bool = True) -> dict:
+    """Train a DINOv2 regression head over CV folds using cached embeddings.
+
+    Embeddings are precomputed once (frozen backbone); each fold only trains a
+    small MLP head on the D-dim vectors, so this is fast even on CPU.
+    Uses the same folds as every other model for a fair comparison.
+    """
+    from torch.utils.data import DataLoader, TensorDataset
+
+    try:
+        import dinov2_features
+        from model import DINOv2Regressor
+    except ModuleNotFoundError:
+        from src import dinov2_features
+        from src.model import DINOv2Regressor
+
+    device = get_device()
+    emb = dinov2_features.compute_embeddings(wide)  # {'cls': (N,D), 'image_id'}
+    X = torch.tensor(emb["cls"], dtype=torch.float32)
+    Y = torch.tensor(np.log1p(wide[config.TARGETS].to_numpy(dtype=np.float32)))
+
+    folds = get_cv_folds(wide, n_splits=n_splits)
+    records, fold_weighted = [], []
+
+    for i, (tr, te) in enumerate(folds):
+        if verbose:
+            print(f"[fold {i}] dinov2 head on {device}")
+        tr_loader = DataLoader(TensorDataset(X[tr], Y[tr]), batch_size=batch_size,
+                               shuffle=True)
+        model = DINOv2Regressor(in_dim=config.DINOV2_DIM).to(device)
+        criterion = nn.MSELoss()
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr,
+                                     weight_decay=weight_decay)
+
+        best_score, best_state, no_improve = float("inf"), None, 0
+        best_eval = None
+        for epoch in range(1, max_epochs + 1):
+            model.train()
+            for xb, yb in tr_loader:
+                xb, yb = xb.to(device), yb.to(device)
+                optimizer.zero_grad()
+                loss = criterion(model(xb), yb)
+                loss.backward()
+                optimizer.step()
+            # validate
+            model.eval()
+            with torch.no_grad():
+                log_pred = model(X[te].to(device)).cpu().numpy()
+            log_pred = np.clip(log_pred, 0, LOG_CLIP_MAX)
+            y_pred = np.clip(np.expm1(log_pred), 0, None)
+            y_true = wide.iloc[te][config.TARGETS].to_numpy()
+            ev = evaluate_predictions(y_true, y_pred)
+            if ev["weighted_rmse"] < best_score - 1e-4:
+                best_score, best_eval = ev["weighted_rmse"], ev
+                best_state = {k: v.clone() for k, v in model.state_dict().items()}
+                no_improve = 0
+            else:
+                no_improve += 1
+                if no_improve >= patience:
+                    break
+        fold_weighted.append(best_score)
+        for t, m in best_eval["per_target"].items():
+            records.append({"model": "dinov2", "fold": i, "target": t, **m})
+
+    raw = pd.DataFrame(records)
+    summary = (raw.groupby(["model", "target"])[["rmse", "mae", "r2"]]
+               .agg(["mean", "std"]).round(3))
+    return {"raw": raw, "summary": summary,
+            "weighted_rmse_mean": float(np.mean(fold_weighted)),
+            "weighted_rmse_std": float(np.std(fold_weighted)),
+            "fold_weighted": fold_weighted}

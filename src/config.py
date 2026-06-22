@@ -69,3 +69,24 @@ RANDOM_STATE: int = 42
 def ensure_dirs() -> None:
     """Create output directories if they do not exist."""
     DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
+
+
+# --------------------------------------------------------------------------- #
+# Method toggles — enable/disable model families without touching code.
+# DINOv2 flags default to False so the base submission never loads the heavy
+# ViT unless explicitly requested.
+# --------------------------------------------------------------------------- #
+RUN_NAIVE: bool = True
+RUN_TABULAR: bool = True
+RUN_SIMPLE_CNN: bool = True
+RUN_RESNET_FROZEN: bool = True
+RUN_RESNET_FINETUNE: bool = True
+RUN_DINOV2_REGRESSION: bool = False
+RUN_DINOV2_SEGMENTATION: bool = False
+
+# DINOv2 settings
+DINOV2_NAME: str = "dinov2_vits14"   # ViT-S/14, 384-dim embeddings (light, fast)
+DINOV2_DIM: int = 384
+DINOV2_IMG_SIZE: int = 224           # must be a multiple of 14
+# Cache for precomputed frozen embeddings (computed once, reused across folds)
+DINOV2_CACHE: Path = DATA_PROCESSED / "dinov2_embeddings.npz"
