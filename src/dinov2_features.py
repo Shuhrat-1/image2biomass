@@ -87,19 +87,3 @@ def compute_embeddings(wide, img_dir: Path = config.LABELLED_IMG_DIR,
     return {"cls": cls, "image_id": np.array(ids, dtype=object)}
 
 
-def extract_patch_tokens(image_path: Path):
-    """Return per-patch embeddings for one image (for segmentation).
-
-    Shape: (n_patches, D) plus the patch grid (h, w) so masks can be reshaped.
-    """
-    import torch
-    from PIL import Image
-
-    model, device = _load_backbone()
-    tf = _build_transform()
-    img = tf(Image.open(image_path).convert("RGB")).unsqueeze(0).to(device)
-    with torch.no_grad():
-        out = model.forward_features(img)
-        patches = out["x_norm_patchtokens"][0].cpu().numpy()  # (n_patches, D)
-    grid = config.DINOV2_IMG_SIZE // 14
-    return patches, (grid, grid)

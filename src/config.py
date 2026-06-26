@@ -82,7 +82,6 @@ RUN_SIMPLE_CNN: bool = True
 RUN_RESNET_FROZEN: bool = True
 RUN_RESNET_FINETUNE: bool = True
 RUN_DINOV2_REGRESSION: bool = False
-RUN_DINOV2_SEGMENTATION: bool = False
 
 # DINOv2 settings
 DINOV2_NAME: str = "dinov2_vits14"   # ViT-S/14, 384-dim embeddings (light, fast)

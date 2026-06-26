@@ -144,3 +144,25 @@ def run_all_baselines(wide: pd.DataFrame, n_splits: int = 5) -> dict:
         "weighted": weighted_scores_by_model(all_res),
         "folds": folds,
     }
+
+
+def weighted_per_fold(results: pd.DataFrame) -> dict:
+    """Per-fold weighted RMSE for each model (enables mean +/- std and paired tests).
+
+    Unlike weighted_scores_by_model (which averages RMSE across folds first),
+    this computes the weighted score within each fold, so we get a distribution
+    over folds — needed for std and for paired significance tests vs other models.
+    """
+    out = {}
+    for model in results["model"].unique():
+        sub = results[results["model"] == model]
+        fold_scores = []
+        for f in sorted(sub["fold"].unique()):
+            per_target = sub[sub["fold"] == f].set_index("target")["rmse"].to_dict()
+            fold_scores.append(weighted_score(per_target))
+        out[model] = {
+            "fold_weighted": fold_scores,
+            "weighted_rmse_mean": float(np.mean(fold_scores)),
+            "weighted_rmse_std": float(np.std(fold_scores)),
+        }
+    return out
