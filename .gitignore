@@ -3,10 +3,14 @@ data/raw/labelled/
 data/raw/kaggle_test/
 data/raw/*.zip
 data/processed/*.csv
-
-# Model checkpoints (large binaries)
-models/*.pt
-
+ 
+# Model checkpoints (large binaries, anywhere in the tree)
+*.pt
+ 
+# HF Space working copy — it is a SEPARATE git repo (do not nest it here)
+pasture-biomass/
+hf_space/
+ 
 # Python
 __pycache__/
 *.py[cod]
@@ -14,11 +18,17 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
-
+ 
+# Office temporary / lock files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+ 
 # OS / IDE
 .DS_Store
 .vscode/
 *.log
-
+ 
 # Keep the labelled.csv (small, useful) — do NOT ignore it
 !data/raw/labelled.csv
+ 
